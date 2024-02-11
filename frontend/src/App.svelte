@@ -29,9 +29,25 @@
     return response;
   }
 
+    async function simpleQuery() {
+    // ${files.map(file => file.name)}
+    const formData = new FormData();
+    formData.append("db_id", "123");
+    formData.append("question_text", qn);
+
+    const response = await fetch("http://localhost:8080/simplequery", {
+      method: "POST",
+      body: formData,
+    }).then((x) => x.json());
+    return response;
+  }
+
   let promise;
   function handleAskQnClick() {
     promise = askQn().then((x) => JSON.stringify(x));
+  }
+  function handleSimpleQueryClick() {
+    promise = simpleQuery().then((x) => JSON.stringify(x));
   }
 
   async function uploadFiles() {
@@ -79,7 +95,8 @@
 
   <div style="padding-top: 1em;">
     <textarea bind:value={qn} />
-    <button on:click={handleAskQnClick} disabled={!qn}>askqn</button>
+    <button on:click={handleAskQnClick} disabled={!qn}>ask qn</button>
+    <button on:click={handleSimpleQueryClick} disabled={!qn}>doc query</button>
   </div>
 
   <output class="text-output">
