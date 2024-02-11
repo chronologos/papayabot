@@ -3,17 +3,9 @@ import os
 import logging
 import chromadb
 import time
+import ml
 
-from langchain_community.document_loaders import PyPDFLoader
-import bs4
-from langchain import hub
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import WebBaseLoader
-from langchain_community.vectorstores import Chroma
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_community.document_loaders import PyPDFLoader
+
 from flask_cors import CORS, cross_origin
 
 import getpass
@@ -21,29 +13,6 @@ import os
 
 app = Flask(__name__)
 CORS(app)
-
-
-def get_openai_api_key():
-    os.environ["OPENAI_API_KEY"] = getpass.getpass()
-
-
-def load_pdf(path):
-    loader = PyPDFLoader(path)
-    pages = loader.load()
-    return pages
-
-
-def create_vector_store(contents):
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000, chunk_overlap=200)
-    splits = text_splitter.split_documents(contents)
-    vector_store = Chroma.from_documents(
-        documents=splits, embedding=OpenAIEmbeddings())
-    return vector_store
-
-
-def format_docs(docs):
-    return "\n\n".join(doc.page_content for doc in docs)
 
 
 @app.route('/upload', methods=['POST'])
@@ -56,11 +25,12 @@ def upload_file():
         uploaded_file = request.files['uploaded_file']
         contents = str(uploaded_file.read())
 
-        # vector_store = create_vector_store(contents)
+        vector_store = ml.create_vector_store(contents)
         collection.add(
             documents=[contents],
             metadatas=[{"source": "upload", "uploaded_time": time.time()}],
-            ids=[str(time.time())] # find better ID. reusing ID results in no upload.
+            # find better ID. reusing ID results in no upload.
+            ids=[str(time.time())]
         )
 
         # For demonstration, we'll just print the file name
@@ -116,6 +86,6 @@ if __name__ == '__main__':
     # chroma_client = chromadb.PersistentClient(path=f"dbs/123")
     # chroma_client.delete_collection(name="my_collection").count()
     # logging.info(str(chroma_client.list_collections()),
-                #  chroma_client.get_collection(name="my_collection").count())
+    #  chroma_client.get_collection(name="my_collection").count())
 
     app.run(debug=True, port=port)
