@@ -25,81 +25,76 @@
     const response = await fetch("http://localhost:8080/askqn", {
       method: "POST",
       body: formData,
-    }).then(x => x.json());
-    
-    alert(response);
+    }).then((x) => x.json());
+    return response;
   }
 
-  async function uploadFiles(formData) {
+  let promise;
+  function handleAskQnClick() {
+    promise = askQn().then((x) => JSON.stringify(x));
+  }
+
+  async function uploadFiles() {
+    const formData = new FormData();
+    formData.append("db_id", "123");
+    // TODO: support more than one file
+    formData.append("uploaded_file", files[0]);
     try {
       const response = await fetch("http://localhost:8080/upload", {
         mode: "no-cors", // no-cors, *cors, same-origin
-        method: "PUT",
+        method: "POST",
         body: formData,
       });
       const result = await response.json();
       console.log("Success:", result);
+      return result;
     } catch (error) {
       console.error("Error:", error);
+      return error;
     }
+  }
+  function handleUploadFilesClick() {
+    promise = uploadFiles().then((x) => JSON.stringify(x));
   }
 </script>
 
-<label for="many">Upload multiple files of any type:</label>
-<input bind:files id="many" multiple type="file" />
-
-{#if files}
-  <h2>Selected files:</h2>
-  {#each Array.from(files) as file}
-    <p>{file.name} ({file.size} bytes)</p>
-  {/each}
-{/if}
-
-<textarea bind:value={qn} />
-
-<button on:click={uploadFiles} disabled={!files}>upload</button>
-<button on:click={askQn} disabled={!qn}>askqn</button>
-
 <main>
   <div>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
+    <label for="many">Upload multiple files of any type:</label>
+    <input bind:files id="many" multiple type="file" />
+
+    {#if files}
+      <h2>Selected files:</h2>
+      {#each Array.from(files) as file}
+        <p>{file.name} ({file.size} bytes)</p>
+      {/each}
+    {/if}
+
+    <button
+      style="margin-left: -3em;"
+      on:click={handleUploadFilesClick}
+      disabled={!files}>upload</button
+    >
   </div>
-  <h1>Vite + Svelte</h1>
 
-  <div class="card">
-    <Counter />
+  <div style="padding-top: 1em;">
+    <textarea bind:value={qn} />
+    <button on:click={handleAskQnClick} disabled={!qn}>askqn</button>
   </div>
 
-  <p>
-    Check out <a
-      href="https://github.com/sveltejs/kit#readme"
-      target="_blank"
-      rel="noreferrer">SvelteKit</a
-    >, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">Click on the Vite and Svelte logos to learn more</p>
+  <output class="text-output">
+    {#await promise}
+      <p>...waiting</p>
+    {:then result}
+      <p>{result}</p>
+    {:catch error}
+      <p style="color: red">{error.message}</p>
+    {/await}
+  </output>
 </main>
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
+  .text-output {
+    font-size: larger;
   }
 </style>
