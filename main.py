@@ -17,6 +17,7 @@ def upload_file():
 
     if 'uploaded_file' in request.files:
         uploaded_file = request.files['uploaded_file']
+        logging.info(f"Received upload: {uploaded_file.filename} for DB ID: {db_id}")
         with tempfile.NamedTemporaryFile(delete=True) as temp_file:
             temp_file.write(uploaded_file.read())
             ml.create_or_get_vector_store(

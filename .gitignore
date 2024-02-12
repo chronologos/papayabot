@@ -1,2 +1,4 @@
 papayabot
 dbs
+node_modules
+*.pyc
